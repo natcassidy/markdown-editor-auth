@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: true}))
 //Connect to db
 
 const con = mysql.createConnection({
-    host: "localhost",
+    host: process.env.HOST,
     user: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: "markdown"
