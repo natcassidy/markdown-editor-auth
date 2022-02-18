@@ -6,6 +6,8 @@ const app = express()
 const cors = require('cors')
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
+const { Client } = require('pg');
+const PORT = process.env.PORT || 5001;
 
 app.use(express.json());
 app.use(cors())
@@ -13,18 +15,14 @@ app.use(express.urlencoded({ extended: true}))
 
 //Connect to db
 
-const con = mysql.createConnection({
-    host: process.env.HOST,
-    user: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: "markdown"
-})
-
-con.connect(err => {
-    if (err) throw err
-    console.log('Connected!')
-
-})
+const con = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+  
+con.connect();
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers["authorization"]
@@ -48,7 +46,7 @@ app.post('/login', (req, res) => {
     console.log('/login Username: ' + username + " password " + password)
     let userFromDB
 
-    con.query(`SELECT * FROM USER WHERE username = '${username}'`, (err, result) => {
+    con.query(`SELECT * FROM user_info WHERE username = '${username}'`, (err, result) => {
         if (err) return res.sendStatus(500)
         if (result[0] == undefined) return res.sendStatus(403)
         userFromDB = result[0]
@@ -93,7 +91,7 @@ app.post('/create-user', (req, res) => {
 
     bcrypt.hash(password, 10, (err, hash) => {
         if (err) return res.status(500).send(err)
-        con.query(`INSERT INTO user VALUES ('${username}', '${hash}')`, (err, result) => {
+        con.query(`INSERT INTO user_info VALUES ('${username}', '${hash}')`, (err, result) => {
             console.log('/create-user results from new user creation', result)
             const tokenExpireTime = '15m'
             const accessToken = jwt.sign({ user: username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: tokenExpireTime})
@@ -117,14 +115,14 @@ app.put('/update-password', authenticateToken, (req, res) => {
     const password = req.body.password
 
     bcrypt.hash(password, 10, (err, hash) => {
-        con.query(`UPDATE user SET password = '${hash}' WHERE username = '${req.username}'`, (err, result) => {
+        con.query(`UPDATE user_info SET password = '${hash}' WHERE username = '${req.username}'`, (err, result) => {
             if (err) res.sendStatus(500)
             res.sendStatus(200)
         })
     })
 })
 
-app.listen(4000, () => {
-    console.log('listening on port 4000')
+app.listen(PORT, () => {
+    console.log(`Listening on port ${PORT}`)
 })
 
