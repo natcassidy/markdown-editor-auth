@@ -40,6 +40,10 @@ const authenticateToken = (req, res, next) => {
     })
 }
 
+app.get('/test', (req, res) => {
+    res.send('Server running')
+})
+
 app.post('/login', (req, res) => {
     const username = req.body.username
     const password = req.body.password
