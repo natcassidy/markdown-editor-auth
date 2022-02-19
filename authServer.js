@@ -51,9 +51,9 @@ app.post('/login', (req, res) => {
     let userFromDB
 
     con.query(`SELECT * FROM user_info WHERE username = '${username}'`, (err, result) => {
-        if (err) return res.sendStatus(500)
-        if (result[0] == undefined) return res.sendStatus(403)
-        userFromDB = result[0]
+        if (err) return res.send(err).status(500)
+        if (result.rows[0] == undefined) return res.sendStatus(403)
+        userFromDB = result.rows[0]
 
         bcrypt.compare(password, userFromDB.password).then(result => {
             console.log('/login results, ', result)
@@ -96,6 +96,7 @@ app.post('/create-user', (req, res) => {
     bcrypt.hash(password, 10, (err, hash) => {
         if (err) return res.status(500).send(err)
         con.query(`INSERT INTO user_info VALUES ('${username}', '${hash}')`, (err, result) => {
+            if (err) res.send(err)
             console.log('/create-user results from new user creation', result)
             const tokenExpireTime = '15m'
             const accessToken = jwt.sign({ user: username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: tokenExpireTime})
@@ -105,7 +106,7 @@ app.post('/create-user', (req, res) => {
             
             //create user settings in db
             con.query(`INSERT INTO settings VALUES ('###', '##', '#', '>', '\\*\\*', '\\*', '${username}')`, (err) => {
-                console.log('error inserting into settings: ', err)
+                if (err) console.log('error inserting into settings: ', err)
             })
 
             res.json({ accessToken: accessToken, refreshToken: refreshToken, expireTime: tokenExpireTime})
