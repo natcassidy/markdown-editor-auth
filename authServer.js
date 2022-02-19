@@ -40,10 +40,6 @@ const authenticateToken = (req, res, next) => {
     })
 }
 
-app.get('/test', (req, res) => {
-    res.send('Server running')
-})
-
 app.post('/login', (req, res) => {
     const username = req.body.username
     const password = req.body.password
@@ -105,7 +101,7 @@ app.post('/create-user', (req, res) => {
             // res.cookie('token', accessToken, {httpOnly: true})
             
             //create user settings in db
-            con.query(`INSERT INTO settings VALUES ('###', '##', '#', '>', '\\*\\*', '\\*', '${username}')`, (err) => {
+            con.query(`INSERT INTO settings VALUES ('###', '##', '#', '>', '**', '*', '${username}')`, (err) => {
                 if (err) console.log('error inserting into settings: ', err)
             })
 
